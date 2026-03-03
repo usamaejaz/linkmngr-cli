@@ -17,7 +17,7 @@ import (
 )
 
 var Version = "dev"
-var outputFormat = "json"
+var outputFormat = "table"
 
 func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
@@ -26,7 +26,7 @@ func NewRootCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
-	root.PersistentFlags().StringVarP(&outputFormat, "output", "o", "json", "Output format: json or table")
+	root.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format: json or table")
 
 	root.AddCommand(newAuthCmd())
 	root.AddCommand(newLinksCmd())

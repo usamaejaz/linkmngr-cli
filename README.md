@@ -112,7 +112,7 @@ Precedence:
 ## Global Flags
 
 All commands support:
-- `-o, --output` with `json` (default) or `table`
+- `-o, --output` with `table` (default) or `json`
 
 Examples:
 
