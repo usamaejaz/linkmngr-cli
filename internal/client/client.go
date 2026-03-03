@@ -251,11 +251,46 @@ func (c *Client) GetAnalytics(ctx context.Context, params StatsParams) (map[stri
 }
 
 func (c *Client) ListDomains(ctx context.Context) ([]string, error) {
-	var out []string
+	var out any
 	if err := c.do(ctx, http.MethodGet, "/domains", nil, &out); err != nil {
 		return nil, err
 	}
-	return out, nil
+	domains, ok := extractDomains(out)
+	if !ok {
+		return nil, fmt.Errorf("unexpected /domains response shape")
+	}
+	return domains, nil
+}
+
+func extractDomains(v any) ([]string, bool) {
+	switch t := v.(type) {
+	case []any:
+		out := make([]string, 0, len(t))
+		for _, item := range t {
+			switch it := item.(type) {
+			case string:
+				if strings.TrimSpace(it) != "" {
+					out = append(out, it)
+				}
+			case map[string]any:
+				if d, ok := it["domain"].(string); ok && strings.TrimSpace(d) != "" {
+					out = append(out, d)
+				}
+			}
+		}
+		return out, true
+	case map[string]any:
+		for _, key := range []string{"items", "domains", "data"} {
+			if nested, exists := t[key]; exists {
+				if out, ok := extractDomains(nested); ok {
+					return out, true
+				}
+			}
+		}
+	case []string:
+		return t, true
+	}
+	return nil, false
 }
 
 func (c *Client) ListPages(ctx context.Context, params ListPagesParams) (PaginatedResults[Page], error) {
