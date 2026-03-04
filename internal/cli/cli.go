@@ -22,11 +22,12 @@ var outputFormat = "table"
 func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "linkmngr",
-		Short:         "LinkMngr CLI",
+		Short:         "CLI for LinkMngr",
+		Example:       "  linkmngr auth login <token>\n  linkmngr link list --page 1\n  linkmngr api request GET /links",
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
-	root.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format: json or table")
+	root.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (`table` or `json`)")
 
 	root.AddCommand(newAuthCmd())
 	root.AddCommand(newLinksCmd())
@@ -43,7 +44,8 @@ func NewRootCmd() *cobra.Command {
 func newVersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
-		Short: "Print CLI version",
+		Short: "Print the CLI version",
+		Example: "  linkmngr version",
 		Run: func(cmd *cobra.Command, _ []string) {
 			fmt.Fprintln(cmd.OutOrStdout(), Version)
 		},
@@ -53,13 +55,16 @@ func newVersionCmd() *cobra.Command {
 func newAuthCmd() *cobra.Command {
 	authCmd := &cobra.Command{
 		Use:   "auth",
-		Short: "Manage authentication settings",
+		Short: "Manage authentication",
+		Example: "  linkmngr auth login <token>\n  linkmngr auth status\n  linkmngr auth logout",
 	}
 
 	authCmd.AddCommand(
 		&cobra.Command{
-			Use:   "set-token <token>",
-			Short: "Set API token in local config",
+			Use:     "login <token>",
+			Aliases: []string{"set-token"},
+			Short:   "Authenticate with an API token",
+			Example: "  linkmngr auth login <token>",
 			Args:  cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				cfg, err := config.Load()
@@ -76,7 +81,8 @@ func newAuthCmd() *cobra.Command {
 		},
 		&cobra.Command{
 			Use:   "set-base-url <url>",
-			Short: "Set API base URL in local config",
+			Short: "Set the API base URL in local config",
+			Example: "  linkmngr auth set-base-url https://api.linkmngr.com/v1",
 			Args:  cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				cfg, err := config.Load()
@@ -92,8 +98,10 @@ func newAuthCmd() *cobra.Command {
 			},
 		},
 		&cobra.Command{
-			Use:   "whoami",
-			Short: "Get currently authenticated user",
+			Use:     "status",
+			Aliases: []string{"whoami"},
+			Short:   "Show authentication status",
+			Example: "  linkmngr auth status",
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				c, err := apiClientFromConfig()
 				if err != nil {
@@ -107,8 +115,10 @@ func newAuthCmd() *cobra.Command {
 			},
 		},
 		&cobra.Command{
-			Use:   "revoke",
-			Short: "Revoke current token",
+			Use:     "logout",
+			Aliases: []string{"revoke"},
+			Short:   "Revoke current token",
+			Example: "  linkmngr auth logout",
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				c, err := apiClientFromConfig()
 				if err != nil {
@@ -128,8 +138,10 @@ func newAuthCmd() *cobra.Command {
 
 func newLinksCmd() *cobra.Command {
 	linksCmd := &cobra.Command{
-		Use:   "links",
-		Short: "Manage links",
+		Use:     "link",
+		Aliases: []string{"links"},
+		Short:   "Manage links",
+		Example: "  linkmngr link list\n  linkmngr link get 123\n  linkmngr link create https://example.com",
 	}
 
 	linksCmd.AddCommand(newLinksListCmd())
@@ -146,8 +158,10 @@ func newLinksListCmd() *cobra.Command {
 	var domain string
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "Get all created links",
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "List links",
+		Example: "  linkmngr link list\n  linkmngr link list --page 2 --brand-id 12",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			c, err := apiClientFromConfig()
 			if err != nil {
@@ -165,7 +179,7 @@ func newLinksListCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&page, "page", "p", 1, "Page number")
+	cmd.Flags().IntVarP(&page, "page", "p", 1, "Page number (1-based)")
 	cmd.Flags().IntVar(&brandID, "brand-id", 0, "Filter by brand ID")
 	cmd.Flags().StringVar(&domain, "domain", "", "Filter by domain")
 	return cmd
@@ -173,8 +187,10 @@ func newLinksListCmd() *cobra.Command {
 
 func newLinksGetCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "get <link-id>",
-		Short: "Get a specific link",
+		Use:     "get <link-id>",
+		Aliases: []string{"view"},
+		Short:   "Get a link",
+		Example: "  linkmngr link get 123\n  linkmngr link view 123",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := parseID(args[0], "link ID")
@@ -201,7 +217,8 @@ func newLinksCreateCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "create <destination>",
-		Short: "Create a shortened link",
+		Short: "Create a link",
+		Example: "  linkmngr link create https://example.com\n  linkmngr link create https://example.com --domain linkmn.gr --slug launch",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := apiClientFromConfig()
@@ -224,7 +241,7 @@ func newLinksCreateCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&domain, "domain", "", "Short domain to use")
 	cmd.Flags().StringVar(&slug, "slug", "", "Preferred slug")
-	cmd.Flags().IntVar(&brandID, "brand-id", 0, "Brand ID")
+	cmd.Flags().IntVar(&brandID, "brand-id", 0, "Attach to brand ID")
 	return cmd
 }
 
@@ -237,6 +254,7 @@ func newLinksStatsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stats <link-id>",
 		Short: "Get link stats",
+		Example: "  linkmngr link stats 123 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := parseID(args[0], "link ID")
@@ -260,10 +278,10 @@ func newLinksStatsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&start, "start", "", "Start datetime (ISO 8601)")
-	cmd.Flags().StringVar(&end, "end", "", "End datetime (ISO 8601)")
-	cmd.Flags().StringVar(&timeUnit, "time-unit", "day", "One of: hour, day, week, month, year")
-	cmd.Flags().StringVar(&groupBy, "group-by", "", "One of: device, device_type, country, browser, platform, referrer")
+	cmd.Flags().StringVar(&start, "start", "", "Start time in ISO 8601 format")
+	cmd.Flags().StringVar(&end, "end", "", "End time in ISO 8601 format")
+	cmd.Flags().StringVar(&timeUnit, "time-unit", "day", "Time unit: hour|day|week|month|year")
+	cmd.Flags().StringVar(&groupBy, "group-by", "", "Group by: device|device_type|country|browser|platform|referrer")
 	_ = cmd.MarkFlagRequired("start")
 	_ = cmd.MarkFlagRequired("end")
 	return cmd
@@ -271,8 +289,10 @@ func newLinksStatsCmd() *cobra.Command {
 
 func newBrandsCmd() *cobra.Command {
 	brandsCmd := &cobra.Command{
-		Use:   "brands",
-		Short: "Manage brands",
+		Use:     "brand",
+		Aliases: []string{"brands"},
+		Short:   "Manage brands",
+		Example: "  linkmngr brand list\n  linkmngr brand get 12\n  linkmngr brand domain-check 12 linkmn.gr",
 	}
 
 	brandsCmd.AddCommand(newBrandsListCmd())
@@ -285,8 +305,10 @@ func newBrandsCmd() *cobra.Command {
 func newBrandsListCmd() *cobra.Command {
 	var page int
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "Get all brands",
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "List brands",
+		Example: "  linkmngr brand list\n  linkmngr brand list --page 2",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			c, err := apiClientFromConfig()
 			if err != nil {
@@ -299,14 +321,16 @@ func newBrandsListCmd() *cobra.Command {
 			return printOutput(cmd, results)
 		},
 	}
-	cmd.Flags().IntVarP(&page, "page", "p", 1, "Page number")
+	cmd.Flags().IntVarP(&page, "page", "p", 1, "Page number (1-based)")
 	return cmd
 }
 
 func newBrandsGetCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "get <brand-id>",
-		Short: "Get specific brand",
+		Use:     "get <brand-id>",
+		Aliases: []string{"view"},
+		Short:   "Get a brand",
+		Example: "  linkmngr brand get 12\n  linkmngr brand view 12",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := parseID(args[0], "brand ID")
@@ -328,8 +352,10 @@ func newBrandsGetCmd() *cobra.Command {
 
 func newBrandsCheckDomainCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "check-domain <brand-id> <domain>",
-		Short: "Check if a domain is set up correctly",
+		Use:     "domain-check <brand-id> <domain>",
+		Aliases: []string{"check-domain"},
+		Short:   "Check brand domain configuration",
+		Example: "  linkmngr brand domain-check 12 linkmn.gr",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := parseID(args[0], "brand ID")
@@ -359,6 +385,7 @@ func newAnalyticsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "analytics",
 		Short: "Get metrics about your links",
+		Example: "  linkmngr analytics --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 --group-by country",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			c, err := apiClientFromConfig()
 			if err != nil {
@@ -378,11 +405,11 @@ func newAnalyticsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVar(&brandID, "brand-id", 0, "Brand ID")
-	cmd.Flags().StringVar(&start, "start", "", "Start datetime (ISO 8601)")
-	cmd.Flags().StringVar(&end, "end", "", "End datetime (ISO 8601)")
-	cmd.Flags().StringVar(&timeUnit, "time-unit", "day", "One of: hour, day, week, month, year")
-	cmd.Flags().StringVar(&groupBy, "group-by", "", "One of: device, device_type, country, browser, platform, referrer")
+	cmd.Flags().IntVar(&brandID, "brand-id", 0, "Filter by brand ID")
+	cmd.Flags().StringVar(&start, "start", "", "Start time in ISO 8601 format")
+	cmd.Flags().StringVar(&end, "end", "", "End time in ISO 8601 format")
+	cmd.Flags().StringVar(&timeUnit, "time-unit", "day", "Time unit: hour|day|week|month|year")
+	cmd.Flags().StringVar(&groupBy, "group-by", "", "Group by: device|device_type|country|browser|platform|referrer")
 	_ = cmd.MarkFlagRequired("start")
 	_ = cmd.MarkFlagRequired("end")
 	return cmd
@@ -390,12 +417,16 @@ func newAnalyticsCmd() *cobra.Command {
 
 func newDomainsCmd() *cobra.Command {
 	domainsCmd := &cobra.Command{
-		Use:   "domains",
-		Short: "Manage domains",
+		Use:     "domain",
+		Aliases: []string{"domains"},
+		Short:   "Manage domains",
+		Example: "  linkmngr domain list",
 	}
 	domainsCmd.AddCommand(&cobra.Command{
-		Use:   "list",
-		Short: "Get all available domains",
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "List available domains",
+		Example: "  linkmngr domain list",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			c, err := apiClientFromConfig()
 			if err != nil {
@@ -415,6 +446,7 @@ func newAPICmd() *cobra.Command {
 	apiCmd := &cobra.Command{
 		Use:   "api",
 		Short: "Make raw API requests for advanced/undocumented endpoints",
+		Example: "  linkmngr api request GET /links\n  linkmngr api request POST /links --set destination=https://example.com",
 	}
 	apiCmd.AddCommand(newAPIRequestCmd())
 	return apiCmd
@@ -422,8 +454,10 @@ func newAPICmd() *cobra.Command {
 
 func newPagesCmd() *cobra.Command {
 	pagesCmd := &cobra.Command{
-		Use:   "pages",
-		Short: "Manage bio pages",
+		Use:     "page",
+		Aliases: []string{"pages"},
+		Short:   "Manage bio pages",
+		Example: "  linkmngr page list\n  linkmngr page get 44\n  linkmngr page stats 44 --start <iso> --end <iso>",
 	}
 	pagesCmd.AddCommand(newPagesListCmd())
 	pagesCmd.AddCommand(newPagesGetCmd())
@@ -441,8 +475,10 @@ func newPagesListCmd() *cobra.Command {
 	var query string
 
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List bio pages",
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "List pages",
+		Example: "  linkmngr page list --brand-id 12 --search launch",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			c, err := apiClientFromConfig()
 			if err != nil {
@@ -463,7 +499,7 @@ func newPagesListCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVarP(&page, "page", "p", 1, "Page number")
+	cmd.Flags().IntVarP(&page, "page", "p", 1, "Page number (1-based)")
 	cmd.Flags().IntVar(&brandID, "brand-id", 0, "Filter by brand ID")
 	cmd.Flags().StringVar(&domain, "domain", "", "Filter by domain")
 	cmd.Flags().IntVar(&customDomainID, "custom-domain-id", 0, "Filter by custom domain ID")
@@ -474,8 +510,10 @@ func newPagesListCmd() *cobra.Command {
 
 func newPagesGetCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "get <page-id>",
-		Short: "Get a bio page",
+		Use:     "get <page-id>",
+		Aliases: []string{"view"},
+		Short:   "Get a page",
+		Example: "  linkmngr page get 44\n  linkmngr page view 44",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := parseID(args[0], "page ID")
@@ -504,6 +542,7 @@ func newPagesStatsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stats <page-id>",
 		Short: "Get page analytics stats",
+		Example: "  linkmngr page stats 44 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := parseID(args[0], "page ID")
@@ -527,10 +566,10 @@ func newPagesStatsCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&start, "start", "", "Start datetime (ISO 8601)")
-	cmd.Flags().StringVar(&end, "end", "", "End datetime (ISO 8601)")
-	cmd.Flags().StringVar(&timeUnit, "time-unit", "day", "One of: hour, day, week, month, year")
-	cmd.Flags().StringVar(&groupBy, "group-by", "", "One of: device, device_type, country, browser, platform, referrer")
+	cmd.Flags().StringVar(&start, "start", "", "Start time in ISO 8601 format")
+	cmd.Flags().StringVar(&end, "end", "", "End time in ISO 8601 format")
+	cmd.Flags().StringVar(&timeUnit, "time-unit", "day", "Time unit: hour|day|week|month|year")
+	cmd.Flags().StringVar(&groupBy, "group-by", "", "Group by: device|device_type|country|browser|platform|referrer")
 	_ = cmd.MarkFlagRequired("start")
 	_ = cmd.MarkFlagRequired("end")
 	return cmd
@@ -540,6 +579,7 @@ func newPagesHitsCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "hits <page-id>",
 		Short: "Get recent page hits",
+		Example: "  linkmngr page hits 44",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := parseID(args[0], "page ID")
@@ -567,6 +607,7 @@ func newAPIRequestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "request <method> <path>",
 		Short: "Send a raw request to LinkMngr API (e.g. /links, /brands, /pages)",
+		Example: "  linkmngr api request GET /links\n  linkmngr api request PATCH /brands/12 --data-file payload.json",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c, err := apiClientFromConfig()
@@ -607,7 +648,7 @@ func apiClientFromConfig() (*client.Client, error) {
 
 func apiClient(cfg config.Config) (*client.Client, error) {
 	if cfg.Token == "" {
-		return nil, errors.New("missing API token; set with `linkmngr auth set-token <token>` or LINKMNGR_TOKEN")
+		return nil, errors.New("missing API token; set LINKMNGR_TOKEN or run `linkmngr auth login <token>`")
 	}
 	if cfg.BaseURL == "" {
 		cfg.BaseURL = "https://api.linkmngr.com/v1"
@@ -618,17 +659,17 @@ func apiClient(cfg config.Config) (*client.Client, error) {
 func parseID(raw string, field string) (int, error) {
 	id, err := strconv.Atoi(raw)
 	if err != nil {
-		return 0, fmt.Errorf("invalid %s %q: must be an integer", field, raw)
+		return 0, fmt.Errorf("invalid %s %q: must be an integer (try a numeric ID like `123`)", field, raw)
 	}
 	if id <= 0 {
-		return 0, fmt.Errorf("invalid %s %q: must be > 0", field, raw)
+		return 0, fmt.Errorf("invalid %s %q: must be > 0 (try a numeric ID like `123`)", field, raw)
 	}
 	return id, nil
 }
 
 func buildRequestBody(jsonBody string, jsonBodyFile string, setPairs []string) (map[string]any, error) {
 	if jsonBody != "" && jsonBodyFile != "" {
-		return nil, errors.New("use either --data or --data-file, not both")
+		return nil, errors.New("use either --data or --data-file, not both (try: `linkmngr api request POST /links --set destination=https://example.com`)")
 	}
 
 	if jsonBodyFile != "" {
@@ -654,7 +695,7 @@ func buildRequestBody(jsonBody string, jsonBodyFile string, setPairs []string) (
 	for _, p := range setPairs {
 		k, v, ok := strings.Cut(p, "=")
 		if !ok {
-			return nil, fmt.Errorf("invalid --set value %q: expected key=value", p)
+			return nil, fmt.Errorf("invalid --set value %q: expected key=value (try: --set destination=https://example.com)", p)
 		}
 		k = strings.TrimSpace(k)
 		if k == "" {
@@ -672,7 +713,7 @@ func printOutput(cmd *cobra.Command, v any) error {
 	case "table":
 		return printTable(cmd, v)
 	default:
-		return fmt.Errorf("invalid output format %q: use json or table", outputFormat)
+		return fmt.Errorf("invalid output format %q: use `--output table` or `--output json`", outputFormat)
 	}
 }
 

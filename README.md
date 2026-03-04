@@ -79,7 +79,7 @@ After the workflow finishes, binaries will be attached to the GitHub Release for
 Set token:
 
 ```bash
-./linkmngr auth set-token <your-token>
+./linkmngr auth login <your-token>
 ```
 
 Optional: set API base URL (default is `https://api.linkmngr.com/v1`):
@@ -117,11 +117,13 @@ All commands support:
 Examples:
 
 ```bash
-./linkmngr auth whoami --output json
-./linkmngr links list -o table
+./linkmngr auth status --output json
+./linkmngr link list -o table
 ```
 
 ## Command Reference
+
+Primary resource commands are singular (`link`, `brand`, `page`, `domain`). Plural forms (`links`, `brands`, `pages`, `domains`) are supported as aliases.
 
 ### version
 
@@ -134,7 +136,7 @@ Examples:
 Set token:
 
 ```bash
-./linkmngr auth set-token <token>
+./linkmngr auth login <token>
 ```
 
 Set base URL:
@@ -146,22 +148,27 @@ Set base URL:
 Get authenticated user:
 
 ```bash
-./linkmngr auth whoami
-./linkmngr auth whoami -o table
+./linkmngr auth status
+./linkmngr auth status -o table
 ```
 
 Revoke token:
 
 ```bash
-./linkmngr auth revoke
+./linkmngr auth logout
 ```
+
+Aliases:
+- `auth login` also supports `auth set-token`
+- `auth status` also supports `auth whoami`
+- `auth logout` also supports `auth revoke`
 
 ### links
 
 List links:
 
 ```bash
-./linkmngr links list [--page <n>] [--brand-id <id>] [--domain <domain>]
+./linkmngr link list [--page <n>] [--brand-id <id>] [--domain <domain>]
 ```
 
 Options:
@@ -172,21 +179,24 @@ Options:
 Examples:
 
 ```bash
-./linkmngr links list
-./linkmngr links list --page 2 --brand-id 12
-./linkmngr links list --domain linkmn.gr -o table
+./linkmngr link list
+./linkmngr link list --page 2 --brand-id 12
+./linkmngr link list --domain linkmn.gr -o table
 ```
 
 Get one link:
 
 ```bash
-./linkmngr links get <link-id>
+./linkmngr link get <link-id>
 ```
+
+Alias:
+- `link view`
 
 Create link:
 
 ```bash
-./linkmngr links create <destination> [--domain <domain>] [--slug <slug>] [--brand-id <id>]
+./linkmngr link create <destination> [--domain <domain>] [--slug <slug>] [--brand-id <id>]
 ```
 
 Options:
@@ -197,15 +207,15 @@ Options:
 Examples:
 
 ```bash
-./linkmngr links create https://example.com
-./linkmngr links create https://example.com --domain linkmn.gr
-./linkmngr links create https://example.com --domain linkmn.gr --slug spring-sale --brand-id 12
+./linkmngr link create https://example.com
+./linkmngr link create https://example.com --domain linkmn.gr
+./linkmngr link create https://example.com --domain linkmn.gr --slug spring-sale --brand-id 12
 ```
 
 Get link stats:
 
 ```bash
-./linkmngr links stats <link-id> --start <ISO8601> --end <ISO8601> [--time-unit <unit>] [--group-by <group>]
+./linkmngr link stats <link-id> --start <ISO8601> --end <ISO8601> [--time-unit <unit>] [--group-by <group>]
 ```
 
 Required:
@@ -219,8 +229,8 @@ Optional:
 Examples:
 
 ```bash
-./linkmngr links stats 123 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00
-./linkmngr links stats 123 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 --time-unit hour --group-by country -o table
+./linkmngr link stats 123 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00
+./linkmngr link stats 123 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 --time-unit hour --group-by country -o table
 ```
 
 ### brands
@@ -228,7 +238,7 @@ Examples:
 List brands:
 
 ```bash
-./linkmngr brands list [--page <n>]
+./linkmngr brand list [--page <n>]
 ```
 
 Options:
@@ -237,27 +247,27 @@ Options:
 Examples:
 
 ```bash
-./linkmngr brands list
-./linkmngr brands list --page 2 -o table
+./linkmngr brand list
+./linkmngr brand list --page 2 -o table
 ```
 
 Get one brand:
 
 ```bash
-./linkmngr brands get <brand-id>
+./linkmngr brand get <brand-id>
 ```
 
 Check domain setup:
 
 ```bash
-./linkmngr brands check-domain <brand-id> <domain>
+./linkmngr brand domain-check <brand-id> <domain>
 ```
 
 Examples:
 
 ```bash
-./linkmngr brands get 12
-./linkmngr brands check-domain 12 linkmn.gr
+./linkmngr brand get 12
+./linkmngr brand domain-check 12 linkmn.gr
 ```
 
 ### analytics
@@ -287,8 +297,8 @@ Examples:
 List available domains:
 
 ```bash
-./linkmngr domains list
-./linkmngr domains list -o table
+./linkmngr domain list
+./linkmngr domain list -o table
 ```
 
 ### pages
@@ -296,7 +306,7 @@ List available domains:
 List pages:
 
 ```bash
-./linkmngr pages list [--page <n>] [--brand-id <id>] [--domain <domain>] [--custom-domain-id <id>] [--slug <slug>] [--search <text>]
+./linkmngr page list [--page <n>] [--brand-id <id>] [--domain <domain>] [--custom-domain-id <id>] [--slug <slug>] [--search <text>]
 ```
 
 Options:
@@ -310,21 +320,24 @@ Options:
 Examples:
 
 ```bash
-./linkmngr pages list
-./linkmngr pages list --brand-id 12 --search "product launch" -o table
-./linkmngr pages list --custom-domain-id 3 --slug my-bio
+./linkmngr page list
+./linkmngr page list --brand-id 12 --search "product launch" -o table
+./linkmngr page list --custom-domain-id 3 --slug my-bio
 ```
 
 Get one page:
 
 ```bash
-./linkmngr pages get <page-id>
+./linkmngr page get <page-id>
 ```
+
+Alias:
+- `page view`
 
 Get page stats:
 
 ```bash
-./linkmngr pages stats <page-id> --start <ISO8601> --end <ISO8601> [--time-unit <unit>] [--group-by <group>]
+./linkmngr page stats <page-id> --start <ISO8601> --end <ISO8601> [--time-unit <unit>] [--group-by <group>]
 ```
 
 Required:
@@ -338,19 +351,19 @@ Optional:
 Examples:
 
 ```bash
-./linkmngr pages stats 44 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00
-./linkmngr pages stats 44 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 --group-by country -o table
+./linkmngr page stats 44 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00
+./linkmngr page stats 44 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 --group-by country -o table
 ```
 
 Get recent page hits:
 
 ```bash
-./linkmngr pages hits <page-id>
-./linkmngr pages hits 44 -o table
+./linkmngr page hits <page-id>
+./linkmngr page hits 44 -o table
 ```
 
 Notes:
-- `pages create` is intentionally not implemented in this CLI.
+- `page create` is intentionally not implemented in this CLI.
 - Use `api request` for advanced or undocumented page endpoints.
 
 ### api
@@ -408,11 +421,11 @@ END="2026-03-03T00:00:00+00:00"
 Missing token:
 
 ```text
-missing API token; set with `linkmngr auth set-token <token>` or LINKMNGR_TOKEN
+missing API token; set with `linkmngr auth login <token>` or LINKMNGR_TOKEN
 ```
 
 Common fixes:
-- Set token using `auth set-token`.
+- Set token using `auth login`.
 - Export `LINKMNGR_TOKEN`.
 - Ensure ID arguments are positive integers.
 - For raw API requests, use valid JSON and correct `--set key=value` format.
