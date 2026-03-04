@@ -91,7 +91,7 @@ Optional: set API base URL (default is `https://api.linkmngr.com/v1`):
 Run a command:
 
 ```bash
-./linkmngr links list --page 1
+./linkmngr link list --page 1
 ```
 
 ## Configuration
@@ -123,7 +123,21 @@ Examples:
 
 ## Command Reference
 
-Primary resource commands are singular (`link`, `brand`, `page`, `domain`). Plural forms (`links`, `brands`, `pages`, `domains`) are supported as aliases.
+Primary resource commands are singular and production-default:
+- `link` (alias: `links`)
+- `brand` (alias: `brands`)
+- `domain` (alias: `domains`)
+- `page` (alias: `pages`)
+
+Top-level commands:
+- `version`
+- `auth`
+- `link` (`links` alias)
+- `brand` (`brands` alias)
+- `analytics`
+- `domain` (`domains` alias)
+- `page` (`pages` alias)
+- `api`
 
 ### version
 
@@ -133,157 +147,138 @@ Primary resource commands are singular (`link`, `brand`, `page`, `domain`). Plur
 
 ### auth
 
-Set token:
+Subcommands:
+- `login <token>` (alias: `set-token`)
+- `set-base-url <url>`
+- `status` (alias: `whoami`)
+- `logout` (alias: `revoke`)
+
+Examples:
 
 ```bash
 ./linkmngr auth login <token>
-```
-
-Set base URL:
-
-```bash
-./linkmngr auth set-base-url <url>
-```
-
-Get authenticated user:
-
-```bash
+./linkmngr auth set-token <token>
+./linkmngr auth set-base-url https://api.linkmngr.com/v1
 ./linkmngr auth status
-./linkmngr auth status -o table
-```
-
-Revoke token:
-
-```bash
+./linkmngr auth whoami
 ./linkmngr auth logout
+./linkmngr auth revoke
 ```
 
-Aliases:
-- `auth login` also supports `auth set-token`
-- `auth status` also supports `auth whoami`
-- `auth logout` also supports `auth revoke`
+### link
 
-### links
+Subcommands:
+- `list` (alias: `ls`)
+- `get <link-id>` (alias: `view`)
+- `create <destination>`
+- `stats <link-id>`
 
-List links:
+`link list` usage:
 
 ```bash
 ./linkmngr link list [--page <n>] [--brand-id <id>] [--domain <domain>]
 ```
 
-Options:
-- `--page`, `-p` (default `1`)
+Flags:
+- `-p, --page` (default `1`)
 - `--brand-id`
 - `--domain`
 
-Examples:
-
-```bash
-./linkmngr link list
-./linkmngr link list --page 2 --brand-id 12
-./linkmngr link list --domain linkmn.gr -o table
-```
-
-Get one link:
+`link get` usage:
 
 ```bash
 ./linkmngr link get <link-id>
+./linkmngr link view <link-id>
 ```
 
-Alias:
-- `link view`
-
-Create link:
+`link create` usage:
 
 ```bash
 ./linkmngr link create <destination> [--domain <domain>] [--slug <slug>] [--brand-id <id>]
 ```
 
-Options:
+Flags:
 - `--domain`
 - `--slug`
 - `--brand-id`
 
-Examples:
-
-```bash
-./linkmngr link create https://example.com
-./linkmngr link create https://example.com --domain linkmn.gr
-./linkmngr link create https://example.com --domain linkmn.gr --slug spring-sale --brand-id 12
-```
-
-Get link stats:
+`link stats` usage:
 
 ```bash
 ./linkmngr link stats <link-id> --start <ISO8601> --end <ISO8601> [--time-unit <unit>] [--group-by <group>]
 ```
 
-Required:
+Required flags:
 - `--start`
 - `--end`
 
-Optional:
+Optional flags:
 - `--time-unit` (default `day`): `hour`, `day`, `week`, `month`, `year`
 - `--group-by`: `device`, `device_type`, `country`, `browser`, `platform`, `referrer`
 
 Examples:
 
 ```bash
-./linkmngr link stats 123 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00
+./linkmngr link list
+./linkmngr link ls --page 2 --brand-id 12
+./linkmngr link create https://example.com --domain linkmn.gr --slug spring-sale --brand-id 12
 ./linkmngr link stats 123 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 --time-unit hour --group-by country -o table
 ```
 
-### brands
+### brand
 
-List brands:
+Subcommands:
+- `list` (alias: `ls`)
+- `get <brand-id>` (alias: `view`)
+- `domain-check <brand-id> <domain>` (alias: `check-domain`)
+
+`brand list` usage:
 
 ```bash
 ./linkmngr brand list [--page <n>]
 ```
 
-Options:
-- `--page`, `-p` (default `1`)
+Flags:
+- `-p, --page` (default `1`)
+
+`brand get` usage:
+
+```bash
+./linkmngr brand get <brand-id>
+./linkmngr brand view <brand-id>
+```
+
+`brand domain-check` usage:
+
+```bash
+./linkmngr brand domain-check <brand-id> <domain>
+./linkmngr brand check-domain <brand-id> <domain>
+```
 
 Examples:
 
 ```bash
 ./linkmngr brand list
-./linkmngr brand list --page 2 -o table
-```
-
-Get one brand:
-
-```bash
-./linkmngr brand get <brand-id>
-```
-
-Check domain setup:
-
-```bash
-./linkmngr brand domain-check <brand-id> <domain>
-```
-
-Examples:
-
-```bash
 ./linkmngr brand get 12
 ./linkmngr brand domain-check 12 linkmn.gr
 ```
 
 ### analytics
 
+Usage:
+
 ```bash
 ./linkmngr analytics --start <ISO8601> --end <ISO8601> [--time-unit <unit>] [--group-by <group>] [--brand-id <id>]
 ```
 
-Required:
+Required flags:
 - `--start`
 - `--end`
 
-Optional:
+Optional flags:
+- `--brand-id`
 - `--time-unit` (default `day`): `hour`, `day`, `week`, `month`, `year`
 - `--group-by`: `device`, `device_type`, `country`, `browser`, `platform`, `referrer`
-- `--brand-id`
 
 Examples:
 
@@ -292,109 +287,105 @@ Examples:
 ./linkmngr analytics --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 --time-unit day --group-by platform --brand-id 12 -o table
 ```
 
-### domains
+### domain
 
-List available domains:
+Subcommands:
+- `list` (alias: `ls`)
+
+Usage:
 
 ```bash
 ./linkmngr domain list
-./linkmngr domain list -o table
+./linkmngr domain ls -o table
 ```
 
-### pages
+### page
 
-List pages:
+Subcommands:
+- `list` (alias: `ls`)
+- `get <page-id>` (alias: `view`)
+- `stats <page-id>`
+- `hits <page-id>`
+
+`page list` usage:
 
 ```bash
 ./linkmngr page list [--page <n>] [--brand-id <id>] [--domain <domain>] [--custom-domain-id <id>] [--slug <slug>] [--search <text>]
 ```
 
-Options:
-- `--page`, `-p` (default `1`)
+Flags:
+- `-p, --page` (default `1`)
 - `--brand-id`
 - `--domain`
 - `--custom-domain-id`
 - `--slug`
 - `--search`
 
-Examples:
-
-```bash
-./linkmngr page list
-./linkmngr page list --brand-id 12 --search "product launch" -o table
-./linkmngr page list --custom-domain-id 3 --slug my-bio
-```
-
-Get one page:
+`page get` usage:
 
 ```bash
 ./linkmngr page get <page-id>
+./linkmngr page view <page-id>
 ```
 
-Alias:
-- `page view`
-
-Get page stats:
+`page stats` usage:
 
 ```bash
 ./linkmngr page stats <page-id> --start <ISO8601> --end <ISO8601> [--time-unit <unit>] [--group-by <group>]
 ```
 
-Required:
+Required flags:
 - `--start`
 - `--end`
 
-Optional:
+Optional flags:
 - `--time-unit` (default `day`): `hour`, `day`, `week`, `month`, `year`
 - `--group-by`: `device`, `device_type`, `country`, `browser`, `platform`, `referrer`
+
+`page hits` usage:
+
+```bash
+./linkmngr page hits <page-id>
+```
 
 Examples:
 
 ```bash
-./linkmngr page stats 44 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00
+./linkmngr page list --brand-id 12 --search "product launch"
+./linkmngr page get 44
 ./linkmngr page stats 44 --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 --group-by country -o table
+./linkmngr page hits 44
 ```
-
-Get recent page hits:
-
-```bash
-./linkmngr page hits <page-id>
-./linkmngr page hits 44 -o table
-```
-
-Notes:
-- `page create` is intentionally not implemented in this CLI.
-- Use `api request` for advanced or undocumented page endpoints.
 
 ### api
 
-Raw API access:
+Subcommands:
+- `request <method> <path>`
+
+`api request` usage:
 
 ```bash
 ./linkmngr api request <method> <path> [--data <json> | --data-file <file> | --set key=value ...]
 ```
 
-Options:
-- `--data` raw JSON body
-- `--data-file` JSON file path
-- `--set` repeatable `key=value` fields
+Flags:
+- `--data` raw JSON request body
+- `--data-file` path to JSON request body file
+- `--set` repeatable `key=value` body fields
 
 Rules:
 - Use either `--data` or `--data-file`, not both.
-- `--set` values are passed as strings.
-- Path accepts both `/links` and `links`.
+- `--set` values are sent as strings.
+- `<path>` accepts `/links` and `links`.
 
 Examples:
 
 ```bash
 ./linkmngr api request GET /links
-./linkmngr api request GET /pages
 ./linkmngr api request DELETE /links/123
 ./linkmngr api request POST /links --data '{"destination":"https://example.com","domain":"linkmn.gr"}'
 ./linkmngr api request POST /links --set destination=https://example.com --set domain=linkmn.gr --set slug=campaign-1
 ./linkmngr api request PATCH /brands/12 --data-file ./payload.json
-./linkmngr api request POST /pages --data-file ./page-create.json
-./linkmngr api request PATCH /pages/44 --set title=NewTitle
 ```
 
 ## Advanced Usage
@@ -402,7 +393,7 @@ Examples:
 Pipe JSON to `jq`:
 
 ```bash
-./linkmngr links list | jq '.items[] | {id, link, clicks}'
+./linkmngr link list | jq '.items[] | {id, link, clicks}'
 ./linkmngr analytics --start 2026-03-01T00:00:00+00:00 --end 2026-03-03T00:00:00+00:00 | jq
 ```
 
@@ -412,8 +403,8 @@ Reusable date window:
 START="2026-03-01T00:00:00+00:00"
 END="2026-03-03T00:00:00+00:00"
 
-./linkmngr links stats 123 --start "$START" --end "$END" --group-by country
-./linkmngr pages stats 44 --start "$START" --end "$END" --group-by platform
+./linkmngr link stats 123 --start "$START" --end "$END" --group-by country
+./linkmngr page stats 44 --start "$START" --end "$END" --group-by platform
 ```
 
 ## Troubleshooting
@@ -421,7 +412,7 @@ END="2026-03-03T00:00:00+00:00"
 Missing token:
 
 ```text
-missing API token; set with `linkmngr auth login <token>` or LINKMNGR_TOKEN
+missing API token; set LINKMNGR_TOKEN or run `linkmngr auth login <token>`
 ```
 
 Common fixes:
